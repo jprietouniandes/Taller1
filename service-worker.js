@@ -5,14 +5,14 @@ const CACHE_NAME = "static-cache-v2";
 const DATA_CACHE_NAME = "data-cache-v1";
 
 var FILES_TO_CACHE = [
-  '/',
-  '/index.html',
-  '/scripts/install.js',
-  '/scripts/app.js',
-  '/styles/inline.css',
-  '/images/ic_add_white_24px.svg',
-  '/images/ic_refresh_white_24px.svg',
-  '/images/icons/icon-128x128.png',
+  "/",
+  "/index.html",
+  "/scripts/install.js",
+  "/scripts/app.js",
+  "/styles/inline.css",
+  "/images/ic_add_white_24px.svg",
+  "/images/ic_refresh_white_24px.svg",
+  "/images/icons/icon-128x128.png"
 ];
 
 self.addEventListener("install", evt => {
