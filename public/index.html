@@ -101,6 +101,20 @@
 
   <!-- Uncomment the line below when ready to test with fake data -->
   <script src="scripts/app.js" async></script>
+  <script>
+      // CODELAB: Register service worker.
+      // CODELAB: Register service worker.
+      console.log("Service worker enter.");
+      if ("serviceWorker" in navigator) {
+        console.log("Service worker loaded.");
+        window.addEventListener("load", () => {
+          navigator.serviceWorker.register("/service-worker.js").then(reg => {
+            console.log("Service worker registered.", reg);
+          });
+        });
+      }
+      console.log("Service worker out.");
+    </script>
 
 </body>
 </html>
