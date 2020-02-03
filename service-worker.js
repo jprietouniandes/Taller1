@@ -1,9 +1,13 @@
-var cacheName = 'Jeg-Pwapp-Cache';
-var dataCacheName = 'Jeg-Pwapp-Time-Data';
+"use strict";
 
-var filesToCache = [
+// CODELAB: Update cache names any time any of the cached files change.
+const CACHE_NAME = "static-cache-v2";
+const DATA_CACHE_NAME = "data-cache-v1";
+
+var FILES_TO_CACHE = [
   '/',
   '/index.html',
+  '/scripts/install.js',
   '/scripts/app.js',
   '/styles/inline.css',
   '/images/ic_add_white_24px.svg',
@@ -11,62 +15,65 @@ var filesToCache = [
   '/images/icons/icon-128x128.png',
 ];
 
-self.addEventListener('install', function(e) {
-  console.log('[ServiceWorker] Install');
-  e.waitUntil(
-    caches.open(cacheName).then(function(cache) {
-      console.log('[ServiceWorker] Caching app shell');
-      return cache.addAll(filesToCache);
+self.addEventListener("install", evt => {
+  console.log("[ServiceWorker] Install");
+  // CODELAB: Precache static resources here.
+  evt.waitUntil(
+    caches.open(CACHE_NAME).then(cache => {
+      console.log("[ServiceWorker] Pre-caching offline page");
+      return cache.addAll(FILES_TO_CACHE);
     })
   );
+
+  self.skipWaiting();
 });
 
-
-self.addEventListener('activate', function(e) {
-  console.log('[ServiceWorker] Activate');
-  e.waitUntil(
-    caches.keys().then(function(keyList) {
-      return Promise.all(keyList.map(function(key) {
-        if (key !== cacheName && key !== dataCacheName) {
-          console.log('[ServiceWorker] Removing old cache', key);
-          return caches.delete(key);
-        }
-      }));
+self.addEventListener("activate", evt => {
+  console.log("[ServiceWorker] Activate");
+  // CODELAB: Remove previous cached data from disk.
+  evt.waitUntil(
+    caches.keys().then(keyList => {
+      return Promise.all(
+        keyList.map(key => {
+          if (key !== CACHE_NAME && key !== DATA_CACHE_NAME) {
+            console.log("[ServiceWorker] Removing old cache", key);
+            return caches.delete(key);
+          }
+        })
+      );
     })
   );
-  return self.clients.claim();
+  self.clients.claim();
 });
 
-
-self.addEventListener('fetch', function(e) {
-  console.log('[Service Worker] Fetch', e.request.url);
-  var dataUrl = 'https://api-ratp.pierre-grimaud.fr/v3/schedules/';
-  if (e.request.url.indexOf(dataUrl) > -1) {
-    /*
-     * When the request URL contains dataUrl, the app is asking for fresh
-     * weather data. In this case, the service worker always goes to the
-     * network and then caches the response. This is called the "Cache then
-     * network" strategy:
-     * https://jakearchibald.com/2014/offline-cookbook/#cache-then-network
-     */
-    e.respondWith(
-      caches.open(dataCacheName).then(function(cache) {
-        return fetch(e.request).then(function(response){
-          cache.put(e.request.url, response.clone());
-          return response;
-        });
+self.addEventListener("fetch", evt => {
+  console.log("[ServiceWorker] Fetch", evt.request.url);
+  // CODELAB: Add fetch event handler here.
+  if (evt.request.url.includes("/forecast/")) {
+    console.log("[Service Worker] Fetch (data)", evt.request.url);
+    evt.respondWith(
+      caches.open(DATA_CACHE_NAME).then(cache => {
+        return fetch(evt.request)
+          .then(response => {
+            // If the response was good, clone it and store it in the cache.
+            if (response.status === 200) {
+              cache.put(evt.request.url, response.clone());
+            }
+            return response;
+          })
+          .catch(err => {
+            // Network request failed, try to get it from the cache.
+            return cache.match(evt.request);
+          });
       })
     );
-  } else {
-    /*
-     * The app is asking for app shell files. In this scenario the app uses the
-     * "Cache, falling back to the network" offline strategy:
-     * https://jakearchibald.com/2014/offline-cookbook/#cache-falling-back-to-network
-     */
-    e.respondWith(
-      caches.match(e.request).then(function(response) {
-        return response || fetch(e.request);
-      })
-    );
+    return;
   }
+  evt.respondWith(
+    caches.open(CACHE_NAME).then(cache => {
+      return cache.match(evt.request).then(response => {
+        return response || fetch(evt.request);
+      });
+    })
+  );
 });
