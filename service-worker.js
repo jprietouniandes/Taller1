@@ -9,8 +9,6 @@ var filesToCache = [
   '/images/ic_add_white_24px.svg',
   '/images/ic_refresh_white_24px.svg',
   '/images/icons/icon-128x128.png',
-  '/images/icons/icon-256x256.png',
-  '/images/icons/icon-512x512.png',
 ];
 
 self.addEventListener('install', function(e) {
